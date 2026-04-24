@@ -60,8 +60,8 @@ async def chat(request: ChatRequest):
 
     # Setting the expert analyst persona and injecting the data context + history
     full_prompt = (
-        f"You are an expert data analyst. Be highly concise, direct, and relevant. "
-        f"Prioritize quality and exact answers over quantity. Do NOT over-explain, avoid fluff, and only provide exactly what is asked. "
+        f"You are an expert data analyst. Provide clear, comprehensive, yet concise answers. "
+        f"Avoid unnecessary rambling, but ALWAYS include relevant context, units, and brief explanations of the numbers you provide so the user doesn't have to ask follow-up questions. "
         f"Context:\n{context}{history_text}\n\nUser: {request.message}"
     )
 
