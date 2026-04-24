@@ -15,7 +15,7 @@ app = FastAPI(title="CSV Analyst AI")
 # Allowing the React frontend to talk to this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -53,14 +53,18 @@ async def chat(request: ChatRequest):
     full_prompt = f"You are an expert data analyst. Context:\n{context}\nUser: {request.message}"
 
     async def stream_response():
-        # Using the async client so we don't hang the server
-        stream = await client.aio.models.generate_content_stream(
-            model=MODEL,
-            contents=full_prompt,
-            config=types.GenerateContentConfig(max_output_tokens=1024)
-        )
-        async for chunk in stream:
-            if chunk.text:
-                yield chunk.text
+        try:
+            # Using the async client so we don't hang the server
+            stream = await client.aio.models.generate_content_stream(
+                model=MODEL,
+                contents=full_prompt
+            )
+            async for chunk in stream:
+                if chunk.text:
+                    yield chunk.text
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            yield f"\n\n**Error during streaming:** {str(e)}"
 
     return StreamingResponse(stream_response(), media_type="text/plain")
