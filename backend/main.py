@@ -62,19 +62,23 @@ async def chat(request: ChatRequest):
     if history_text:
         history_text = f"\n\nPrevious Conversation:\n{history_text}"
 
-    # Pre-computation Step: Ask the LLM to write pandas code
+    # Pre-computation Step: Ask the LLM to write multi-line pandas code
     computed_data = ""
     if df is not None:
         code_prompt = f"""
-You are a Pandas Python code generator. The user uploaded a CSV loaded as a DataFrame named `df`.
-Context: {context}
-Recent Conversation History (for context): {history_text}
+You are a highly advanced, dataset-agnostic Pandas Python code generator. 
+The user uploaded a CSV loaded as a DataFrame named `df`.
+Context about `df`: {context}
+Recent Conversation History: {history_text}
 Current Question: {request.message}
 
-Write a single Python expression using `df` that evaluates to the exact answer.
-If the user says "what about 2018", use the context from the conversation history to infer they mean "director with most films in 2018 excluding unknown".
-Examples: df[df['director'] != 'Unknown']['director'].value_counts().idxmax(), df['delay'].sum()
-Return ONLY the raw python expression. Do NOT write markdown, backticks, or comments. If no code is needed, return 'NONE'.
+Write a robust, multi-line Python script using `df` to answer the question exactly.
+Rules:
+1. Be dataset-agnostic. Handle any complex operations needed.
+2. If the user asks to count or analyze items in a categorical column that contains comma-separated lists (e.g., multiple directors/actors in one cell), you MUST split the strings and use `.explode()` to count them individually. Always strip whitespace from strings.
+3. Do NOT use `eval` or `exec` or `import` inside your code.
+4. Save the final mathematically correct answer to a variable named `result`.
+5. Return ONLY the raw python code. Do NOT write markdown, backticks, or comments. If no code is needed, return 'NONE'.
 """
         try:
             code_res = await client.aio.models.generate_content(model="gemini-2.5-flash", contents=code_prompt)
@@ -82,11 +86,13 @@ Return ONLY the raw python expression. Do NOT write markdown, backticks, or comm
             if code.lower().startswith('python'):
                 code = code[6:].strip()
             
-            if code != 'NONE' and 'df' in code and 'import' not in code and 'eval' not in code and 'exec' not in code:
+            if code != 'NONE' and 'df' in code and 'import ' not in code:
                 import pandas as pd
-                result = eval(code, {"__builtins__": {}}, {"df": df, "pd": pd})
+                local_vars = {"df": df, "pd": pd, "result": None}
+                exec(code, {"__builtins__": {}}, local_vars)
+                result = local_vars.get("result")
                 computed_data = f"\n\n[Backend Computed Data Result (100% mathematically accurate): {result}]\nUse this exact computed result in your final answer."
-                print(f"Executed Pandas: {code} -> {result}")
+                print(f"Executed Multi-line Pandas Code:\n{code}\nResult -> {result}")
         except Exception as e:
             print(f"Pandas execution failed: {e}")
 
