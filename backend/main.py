@@ -80,8 +80,8 @@ async def chat(request: ChatRequest):
             
         except Exception as e:
             error_msg = str(e).lower()
-            if "429" in error_msg or "quota" in error_msg or "exhausted" in error_msg:
-                # Quota reached! Fallback to flash-lite
+            if any(term in error_msg for term in ["429", "quota", "exhausted", "503", "unavailable", "high demand"]):
+                # Quota reached or model overloaded! Fallback to flash-lite
                 try:
                     fallback_stream = await client.aio.models.generate_content_stream(
                         model="gemini-2.5-flash-lite",
