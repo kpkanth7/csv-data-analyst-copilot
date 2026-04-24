@@ -1,7 +1,7 @@
 # CSV Data Analyst Copilot
 
 > [!NOTE]
-> **Live Demo:** [Render deployment link will go here soon!](#)
+> **Live Demo:** [https://csv-data-analyst-frontend.onrender.com](https://csv-data-analyst-frontend.onrender.com)
 
 Hey everyone, Pradhyumna here! I built this CSV Data Analyst Copilot to make exploring and analyzing tabular data super easy and intuitive. Instead of writing pandas code or SQL queries, you just upload your CSV file and chat with an AI that acts as your personal expert data analyst.
 
