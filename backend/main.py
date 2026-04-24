@@ -68,9 +68,9 @@ async def chat(request: ChatRequest):
     async def stream_response():
         full_response = []
         try:
-            # Using the async client so we don't hang the server
+            # Try with the primary model first
             stream = await client.aio.models.generate_content_stream(
-                model=MODEL,
+                model="gemini-2.5-flash",
                 contents=full_prompt
             )
             async for chunk in stream:
@@ -78,17 +78,34 @@ async def chat(request: ChatRequest):
                     full_response.append(chunk.text)
                     yield chunk.text
             
-            # Save conversation to history
-            session_data["history"].append({"role": "user", "content": request.message})
-            session_data["history"].append({"role": "assistant", "content": "".join(full_response)})
-            
         except Exception as e:
             error_msg = str(e).lower()
             if "429" in error_msg or "quota" in error_msg or "exhausted" in error_msg:
-                yield "\n\nThe quota is done for the day. Please check back tomorrow."
+                # Quota reached! Fallback to flash-lite
+                try:
+                    fallback_stream = await client.aio.models.generate_content_stream(
+                        model="gemini-2.5-flash-lite",
+                        contents=full_prompt
+                    )
+                    # Only stream the fallback if we haven't already output text from the first model
+                    if not full_response:
+                        async for chunk in fallback_stream:
+                            if chunk.text:
+                                full_response.append(chunk.text)
+                                yield chunk.text
+                    else:
+                        yield "\n\n*[Switched to backup model due to limits. Please ask your question again.]*"
+                        return
+                except Exception as fallback_e:
+                    yield f"\n\n**Both AI models reached their daily limit.** Please check back tomorrow."
             else:
                 import traceback
                 traceback.print_exc()
                 yield f"\n\n**Error during streaming:** {str(e)}"
+
+        if full_response:
+            # Save conversation to history only if we got a response
+            session_data["history"].append({"role": "user", "content": request.message})
+            session_data["history"].append({"role": "assistant", "content": "".join(full_response)})
 
     return StreamingResponse(stream_response(), media_type="text/plain")
