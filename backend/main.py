@@ -63,8 +63,12 @@ async def chat(request: ChatRequest):
                 if chunk.text:
                     yield chunk.text
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            yield f"\n\n**Error during streaming:** {str(e)}"
+            error_msg = str(e).lower()
+            if "429" in error_msg or "quota" in error_msg or "exhausted" in error_msg:
+                yield "\n\nThe quota is done for the day. Please check back tomorrow."
+            else:
+                import traceback
+                traceback.print_exc()
+                yield f"\n\n**Error during streaming:** {str(e)}"
 
     return StreamingResponse(stream_response(), media_type="text/plain")

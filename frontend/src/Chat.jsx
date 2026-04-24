@@ -74,7 +74,7 @@ function Chat({ sessionId }) {
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <h2>Data Analyst Copilot</h2>
+        <h2>CSV Data Analyst Copilot</h2>
         <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>🟢 Active</span>
       </div>
       

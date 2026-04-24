@@ -48,7 +48,7 @@ function Upload({ onUploadSuccess }) {
 
   return (
     <div className="card">
-      <h1>AI Data Analyst</h1>
+      <h1>CSV Data Analyst Copilot</h1>
       <p>Drop your CSV file here to start exploring your data.</p>
       
       <div className={`upload-zone ${file ? 'active' : ''}`} onClick={() => document.getElementById('csvUpload').click()}>
