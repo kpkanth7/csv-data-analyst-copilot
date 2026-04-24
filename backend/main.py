@@ -15,7 +15,7 @@ app = FastAPI(title="CSV Analyst AI")
 # Allowing the React frontend to talk to this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -26,8 +26,9 @@ function Upload({ onUploadSuccess }) {
     formData.append('file', file);
 
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       // Sending it over to the FastAPI backend
-      const response = await fetch('http://localhost:8000/upload', {
+      const response = await fetch(`${API_URL}/upload`, {
         method: 'POST',
         body: formData,
       });
