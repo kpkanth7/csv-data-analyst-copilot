@@ -68,9 +68,12 @@ async def chat(request: ChatRequest):
         code_prompt = f"""
 You are a Pandas Python code generator. The user uploaded a CSV loaded as a DataFrame named `df`.
 Context: {context}
-Question: {request.message}
-Write a single Python expression using `df` that answers the question exactly.
-Examples: df['delay'].sum(), df.groupby('type')['delay'].mean().idxmax()
+Recent Conversation History (for context): {history_text}
+Current Question: {request.message}
+
+Write a single Python expression using `df` that evaluates to the exact answer.
+If the user says "what about 2018", use the context from the conversation history to infer they mean "director with most films in 2018 excluding unknown".
+Examples: df[df['director'] != 'Unknown']['director'].value_counts().idxmax(), df['delay'].sum()
 Return ONLY the raw python expression. Do NOT write markdown, backticks, or comments. If no code is needed, return 'NONE'.
 """
         try:
